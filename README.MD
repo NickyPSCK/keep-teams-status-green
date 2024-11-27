@@ -47,7 +47,7 @@ The **AlwaysGreen** Python script ensures your system remains active by detectin
 Run the script from the command line:
 
 ```bash
-python alwaysgreen.py --time 60 --color --status --logo
+python app.py --time 60 --color --status --logo
 ```
 
 ### Command-Line Arguments
@@ -98,7 +98,7 @@ The script features an ASCII art logo for branding and visual appeal:
 ----------------------------------------------
 ||||||||||||||||||||||||||||||||||||||||||||||
 ----------------------------------------------
-    ____           _____ _____ ____ _   _ 
+    ____           _____ _____ ____ _   _
    / ___|         |_   _| ____/ ___| | | |
   | |  _   _____    | | |  _|| |   | |_| |
   | |_| | |_____|   | | | |__| |___|  _  |
@@ -106,7 +106,7 @@ The script features an ASCII art logo for branding and visual appeal:
 
 >>>>>>>>> :: Unleash Green Energy :: <<<<<<<<<
 ----------------------------------------------
-||||||||||||||||||||||||||||||||||||||||||||||
+|||||||||||| PRESS CTRL-C TO QUIT ||||||||||||
 ----------------------------------------------
 ```
 

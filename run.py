@@ -36,7 +36,6 @@ class AlwaysGreen:
             color (bool): Whether to use colored status output.
             status (bool): Whether to display the user activity status.
         '''
-        super().__init__()
         self._timeout_period = timeout_period
         self._color = color
         self._status = status
