@@ -1,3 +1,8 @@
+# https://www.geeksforgeeks.org/how-to-make-a-python-auto-clicker/
+# https://pypi.org/project/pynput/
+# https://www.asciiart.eu/text-to-ascii-art
+# https://www.geeksforgeeks.org/print-colors-python-terminal/
+
 import time
 import threading
 import argparse
@@ -20,21 +25,19 @@ logo = '''----------------------------------------------
 ----------------------------------------------'''
 
 class AlwaysGreen(threading.Thread):
-    # https://www.geeksforgeeks.org/how-to-make-a-python-auto-clicker/
-    # https://pypi.org/project/pynput/
-    # https://www.asciiart.eu/text-to-ascii-art
     def __init__(
             self,
-            window_period: int=60
+            window_period:int = 60
         ):
         self._window_period = window_period
         self._mouse = mouse.Controller()
         self._move_distance = 100
+        self._time_left = self._window_period
 
     def _set_active(self):
         self._is_moved = True
-        print('>> Status: Active     ', end='\r')
-
+        self._report_status()
+        
     def _on_move(self, x, y):
         self._set_active()
 
@@ -50,11 +53,28 @@ class AlwaysGreen(threading.Thread):
     def _on_release(self, key):
         self._set_active()
 
+    def _report_status(self):
+        if self._is_moved:
+            print(  
+                f'\033[0m::Refresh in {self._time_left:>7}s,',
+                '\033[0m::User Status:', 
+                f'\033[32m  Active', 
+                end='\r',
+            )
+        else:
+            print(
+                f'\033[0m::Refresh in {self._time_left:>7}s,',
+                '\033[0m::User Status:', 
+                f'\033[31mInactive', 
+                end='\r'
+            )
+
+
     def run(self):
         self._is_moved = False
         
         while True:
-            print('>> Status: Inactive     ', end='\r')
+            self._report_status()
             mouse_listener = mouse.Listener(
                 on_move=self._on_move,
                 on_click=self._on_click,
@@ -68,7 +88,10 @@ class AlwaysGreen(threading.Thread):
             mouse_listener.start()
             keyboard_listener.start()
 
-            time.sleep(self._window_period)
+            for s in range(self._window_period, -1, -1):
+                self._report_status()
+                self._time_left = s
+                time.sleep(1)
             
             mouse_listener.stop()
             keyboard_listener.stop()
@@ -90,15 +113,15 @@ class AlwaysGreen(threading.Thread):
             self._is_moved = False
             
 
-
-
 def input_argument():
-    parser = argparse.ArgumentParser(description='G-TECH: Long lasting green technology.')
+    parser = argparse.ArgumentParser(
+        description='G-TECH: Long lasting green technology.'
+    )
     parser.add_argument(
         '--time',
         metavar='window_period',
         type=int,
-        default=2,
+        default=5,
         help='window period')
     args_dict = vars(parser.parse_args())
 
@@ -108,7 +131,5 @@ def input_argument():
 if __name__ == '__main__':
     args_dict = input_argument()
     AW = AlwaysGreen(window_period=args_dict['time'])
-    print(f'''----------------------------------------------''')
-    print(f''':: Refresh Every: {args_dict['time']} S''')
     print(f'{logo}''')
     AW.run()
