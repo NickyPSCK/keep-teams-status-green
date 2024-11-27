@@ -9,7 +9,7 @@ from pynput import mouse, keyboard
 logo = '''----------------------------------------------
 ||||||||||||||||||||||||||||||||||||||||||||||
 ----------------------------------------------
-    ____           _____ _____ ____ _   _ 
+    ____           _____ _____ ____ _   _
    / ___|         |_   _| ____/ ___| | | |
   | |  _   _____    | | |  _|| |   | |_| |
   | |_| | |_____|   | | | |__| |___|  _  |
@@ -20,17 +20,19 @@ logo = '''----------------------------------------------
 |||||||||||| PRESS CTRL-C TO QUIT ||||||||||||
 ----------------------------------------------'''
 
+
 class AlwaysGreen:
     def __init__(
-            self,
-            timeout_period: int = 60,
-            color: bool = False,
-            status: bool = True
-        ):
+        self,
+        timeout_period: int = 60,
+        color: bool = False,
+        status: bool = True
+    ):
         '''
         Prevents inactivity by detecting user input and moving the mouse.
         Args:
-            timeout_period (int): Timeout period in seconds before moving the mouse.
+            timeout_period (int): Timeout period in seconds
+                before moving the mouse.
             color (bool): Whether to use colored status output.
             status (bool): Whether to display the user activity status.
         '''
@@ -43,17 +45,16 @@ class AlwaysGreen:
         self._move_distance = 100
         self._time_left = self._timeout_period
 
-
     def _set_active(self):
         '''Resets the inactive timer when user activity is detected.'''
         self._is_moved = True
         self._time_left = self._timeout_period
         self._report_status()
-        
+
     def _on_move(self, x, y):
         self._set_active()
 
-    def _on_click(self,x, y, button, pressed):
+    def _on_click(self, x, y, button, pressed):
         self._set_active()
 
     def _on_scroll(self, x, y, dx, dy):
@@ -82,10 +83,10 @@ class AlwaysGreen:
             else:
                 status = f'{inactive_color}Inactive'
 
-            print(  
+            print(
                 f'{reset_color}::Inactive in{self._time_left:>7}s,',
-                f'{reset_color}::User Status:', 
-                status, 
+                f'{reset_color}::User Status:',
+                status,
                 f'{reset_color}',
                 end='\r'
             )
@@ -96,7 +97,7 @@ class AlwaysGreen:
             self._report_status()
             self._time_left -= 1
             time.sleep(1)
-    
+
     def _move_mouse(self):
         '''Moves the mouse to prevent inactivity.'''
         if not self._is_moved:
@@ -106,14 +107,14 @@ class AlwaysGreen:
                 self._mouse.release(mouse.Button.left)
             else:
                 self._mouse.move(
-                    self._move_distance, 
+                    self._move_distance,
                     self._move_distance
                 )
 
     def run(self):
         '''Main logic for detecting inactivity and moving the mouse.'''
         self._is_moved = False
-        
+
         while True:
             self._time_left = self._timeout_period
 
@@ -125,21 +126,21 @@ class AlwaysGreen:
             keyboard_listener = keyboard.Listener(
                 on_press=self._on_press,
                 on_release=self._on_release)
-            
+
             mouse_listener.start()
             keyboard_listener.start()
 
             self._wait()
-            
+
             mouse_listener.stop()
             keyboard_listener.stop()
             mouse_listener.join()
             keyboard_listener.join()
-            
+
             self._move_mouse()
 
             self._is_moved = False
-            
+
 
 def input_argument():
     '''Parses command-line arguments.'''
@@ -153,19 +154,19 @@ def input_argument():
         help='Timeout period in seconds before inactivity action is taken.')
 
     parser.add_argument(
-        '--color',        
+        '--color',
         action=argparse.BooleanOptionalAction,
         default=True,
         help='Enable or disable colored output.')
-    
+
     parser.add_argument(
-        '--status',        
+        '--status',
         action=argparse.BooleanOptionalAction,
         default=True,
         help='Enable or disable staus.')
-    
+
     parser.add_argument(
-        '--logo',        
+        '--logo',
         action=argparse.BooleanOptionalAction,
         default=True,
         help='Enable or disable displayed logo.')
@@ -184,7 +185,6 @@ if __name__ == '__main__':
     )
     if args_dict['logo']:
         print(f'{logo}''')
-    
 
     try:
         AW.run()
