@@ -1,6 +1,7 @@
 # G-TECH: Unleash Green Energy
 # Long lasting green technology.
 
+import sys
 import time
 import argparse
 from pynput import mouse, keyboard
@@ -16,7 +17,7 @@ logo = '''----------------------------------------------
 
 >>>>>>>>> :: Unleash Green Energy :: <<<<<<<<<
 ----------------------------------------------
-||||||||||||||||||||||||||||||||||||||||||||||
+|||||||||||| PRESS CTRL-C TO QUIT ||||||||||||
 ----------------------------------------------'''
 
 class AlwaysGreen:
@@ -85,7 +86,8 @@ class AlwaysGreen:
                 f'{reset_color}::Inactive in{self._time_left:>7}s,',
                 f'{reset_color}::User Status:', 
                 status, 
-                end='\r',
+                f'{reset_color}',
+                end='\r'
             )
 
     def _wait(self):
@@ -182,4 +184,10 @@ if __name__ == '__main__':
     )
     if args_dict['logo']:
         print(f'{logo}''')
-    AW.run()
+    
+
+    try:
+        AW.run()
+    except KeyboardInterrupt:
+        print('\n----------------- TERMINATED -----------------')
+        sys.exit(0)
