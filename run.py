@@ -36,6 +36,7 @@ class AlwaysGreen(threading.Thread):
 
     def _set_active(self):
         self._is_moved = True
+        self._time_left = self._window_period
         self._report_status()
         
     def _on_move(self, x, y):
@@ -74,13 +75,13 @@ class AlwaysGreen(threading.Thread):
         self._is_moved = False
         
         while True:
-            self._report_status()
+            self._time_left = self._window_period
+
             mouse_listener = mouse.Listener(
                 on_move=self._on_move,
                 on_click=self._on_click,
                 on_scroll=self._on_scroll
             )
-
             keyboard_listener = keyboard.Listener(
                 on_press=self._on_press,
                 on_release=self._on_release)
@@ -88,9 +89,9 @@ class AlwaysGreen(threading.Thread):
             mouse_listener.start()
             keyboard_listener.start()
 
-            for s in range(self._window_period, -1, -1):
+            while self._time_left >= 0:
                 self._report_status()
-                self._time_left = s
+                self._time_left -= 1
                 time.sleep(1)
             
             mouse_listener.stop()
