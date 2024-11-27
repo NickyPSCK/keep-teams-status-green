@@ -1,14 +1,9 @@
+# G-TECH: Unleash Green Energy
 # Long lasting green technology.
-# https://www.geeksforgeeks.org/how-to-make-a-python-auto-clicker/
-# https://pypi.org/project/pynput/
-# https://www.asciiart.eu/text-to-ascii-art
-# https://www.geeksforgeeks.org/print-colors-python-terminal/
 
 import time
-import threading
 import argparse
-from pynput import mouse
-from pynput import keyboard
+from pynput import mouse, keyboard
 
 logo = '''----------------------------------------------
 ||||||||||||||||||||||||||||||||||||||||||||||
@@ -24,21 +19,34 @@ logo = '''----------------------------------------------
 ||||||||||||||||||||||||||||||||||||||||||||||
 ----------------------------------------------'''
 
-class AlwaysGreen(threading.Thread):
+class AlwaysGreen:
     def __init__(
             self,
-            window_period: int = 60,
-            color: bool = False
+            timeout_period: int = 60,
+            color: bool = False,
+            status: bool = True
         ):
-        self._window_period = window_period
+        '''
+        Prevents inactivity by detecting user input and moving the mouse.
+        Args:
+            timeout_period (int): Timeout period in seconds before moving the mouse.
+            color (bool): Whether to use colored status output.
+            status (bool): Whether to display the user activity status.
+        '''
+        super().__init__()
+        self._timeout_period = timeout_period
         self._color = color
+        self._status = status
+
         self._mouse = mouse.Controller()
         self._move_distance = 100
-        self._time_left = self._window_period
+        self._time_left = self._timeout_period
+
 
     def _set_active(self):
+        '''Resets the inactive timer when user activity is detected.'''
         self._is_moved = True
-        self._time_left = self._window_period
+        self._time_left = self._timeout_period
         self._report_status()
         
     def _on_move(self, x, y):
@@ -57,32 +65,55 @@ class AlwaysGreen(threading.Thread):
         self._set_active()
 
     def _report_status(self):
-        if self._color:
-            reset_color = '\033[0m'
-            active_color = '\033[32m'
-            inactive_color = '\033[33m'
-        else:
-            reset_color = ''
-            active_color = ''
-            inactive_color = ''
+        '''Displays the current user activity status.'''
+        if self._status:
+            if self._color:
+                reset_color = '\033[0m'
+                active_color = '\033[32m'
+                inactive_color = '\033[33m'
+            else:
+                reset_color = ''
+                active_color = ''
+                inactive_color = ''
 
-        if self._is_moved:
-            status = f'{active_color}  Active'
-        else:
-            status = f'{inactive_color}Inactive'
+            if self._is_moved:
+                status = f'{active_color}  Active'
+            else:
+                status = f'{inactive_color}Inactive'
 
-        print(  
-            f'{reset_color}::Inactive in{self._time_left:>7}s,',
-            f'{reset_color}::User Status:', 
-            status, 
-            end='\r',
-        )
+            print(  
+                f'{reset_color}::Inactive in{self._time_left:>7}s,',
+                f'{reset_color}::User Status:', 
+                status, 
+                end='\r',
+            )
+
+    def _wait(self):
+        '''Waits for the timeout period while reporting status.'''
+        while self._time_left >= 0:
+            self._report_status()
+            self._time_left -= 1
+            time.sleep(1)
+    
+    def _move_mouse(self):
+        '''Moves the mouse to prevent inactivity.'''
+        if not self._is_moved:
+            if self._mouse.position != (0, 0):
+                self._mouse.position = (0, 0)
+                self._mouse.press(mouse.Button.left)
+                self._mouse.release(mouse.Button.left)
+            else:
+                self._mouse.move(
+                    self._move_distance, 
+                    self._move_distance
+                )
 
     def run(self):
+        '''Main logic for detecting inactivity and moving the mouse.'''
         self._is_moved = False
         
         while True:
-            self._time_left = self._window_period
+            self._time_left = self._timeout_period
 
             mouse_listener = mouse.Listener(
                 on_move=self._on_move,
@@ -96,50 +127,47 @@ class AlwaysGreen(threading.Thread):
             mouse_listener.start()
             keyboard_listener.start()
 
-            while self._time_left >= 0:
-                self._report_status()
-                self._time_left -= 1
-                time.sleep(1)
+            self._wait()
             
             mouse_listener.stop()
             keyboard_listener.stop()
-
             mouse_listener.join()
             keyboard_listener.join()
             
-            if not self._is_moved:
-                if self._mouse.position != (0, 0):
-                    self._mouse.position = (0, 0)
-                    self._mouse.press(mouse.Button.left)
-                    self._mouse.release(mouse.Button.left)
-                else:
-                    self._mouse.move(
-                        self._move_distance, 
-                        self._move_distance
-                    )
+            self._move_mouse()
 
             self._is_moved = False
             
 
 def input_argument():
+    '''Parses command-line arguments.'''
     parser = argparse.ArgumentParser(
         description='G-TECH: Unleash Green Energy.'
     )
     parser.add_argument(
         '--time',
-        metavar='window_period',
         type=int,
         default=5,
-        help='window period')
+        help='Timeout period in seconds before inactivity action is taken.')
 
     parser.add_argument(
-        '--color',
-        metavar='color',
-        type=bool,
-        default=True,
+        '--color',        
         action=argparse.BooleanOptionalAction,
-        help='color')
+        default=True,
+        help='Enable or disable colored output.')
     
+    parser.add_argument(
+        '--status',        
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help='Enable or disable staus.')
+    
+    parser.add_argument(
+        '--logo',        
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help='Enable or disable displayed logo.')
+
     args_dict = vars(parser.parse_args())
 
     return args_dict
@@ -148,8 +176,10 @@ def input_argument():
 if __name__ == '__main__':
     args_dict = input_argument()
     AW = AlwaysGreen(
-        window_period=args_dict['time'],
-        color=args_dict['color']
+        timeout_period=args_dict['time'],
+        color=args_dict['color'],
+        status=args_dict['status'],
     )
-    print(f'{logo}''')
+    if args_dict['logo']:
+        print(f'{logo}''')
     AW.run()
