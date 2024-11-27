@@ -1,3 +1,4 @@
+# Long lasting green technology.
 # https://www.geeksforgeeks.org/how-to-make-a-python-auto-clicker/
 # https://pypi.org/project/pynput/
 # https://www.asciiart.eu/text-to-ascii-art
@@ -17,19 +18,20 @@ logo = '''----------------------------------------------
   | |  _   _____    | | |  _|| |   | |_| |
   | |_| | |_____|   | | | |__| |___|  _  |
    \\____|           |_| |_____\\____|_| |_|
-          
+
+>>>>>>>>> :: Unleash Green Energy :: <<<<<<<<<
 ----------------------------------------------
 ||||||||||||||||||||||||||||||||||||||||||||||
-----------------------------------------------
->>>>>>>>> :: Unleash Green Energy :: <<<<<<<<<
 ----------------------------------------------'''
 
 class AlwaysGreen(threading.Thread):
     def __init__(
             self,
-            window_period:int = 60
+            window_period: int = 60,
+            color: bool = False
         ):
         self._window_period = window_period
+        self._color = color
         self._mouse = mouse.Controller()
         self._move_distance = 100
         self._time_left = self._window_period
@@ -55,21 +57,26 @@ class AlwaysGreen(threading.Thread):
         self._set_active()
 
     def _report_status(self):
-        if self._is_moved:
-            print(  
-                f'\033[0m::Refresh in {self._time_left:>7}s,',
-                '\033[0m::User Status:', 
-                f'\033[32m  Active', 
-                end='\r',
-            )
+        if self._color:
+            reset_color = '\033[0m'
+            active_color = '\033[32m'
+            inactive_color = '\033[33m'
         else:
-            print(
-                f'\033[0m::Refresh in {self._time_left:>7}s,',
-                '\033[0m::User Status:', 
-                f'\033[31mInactive', 
-                end='\r'
-            )
+            reset_color = ''
+            active_color = ''
+            inactive_color = ''
 
+        if self._is_moved:
+            status = f'{active_color}  Active'
+        else:
+            status = f'{inactive_color}Inactive'
+
+        print(  
+            f'{reset_color}::Inactive in{self._time_left:>7}s,',
+            f'{reset_color}::User Status:', 
+            status, 
+            end='\r',
+        )
 
     def run(self):
         self._is_moved = False
@@ -116,7 +123,7 @@ class AlwaysGreen(threading.Thread):
 
 def input_argument():
     parser = argparse.ArgumentParser(
-        description='G-TECH: Long lasting green technology.'
+        description='G-TECH: Unleash Green Energy.'
     )
     parser.add_argument(
         '--time',
@@ -124,6 +131,15 @@ def input_argument():
         type=int,
         default=5,
         help='window period')
+
+    parser.add_argument(
+        '--color',
+        metavar='color',
+        type=bool,
+        default=True,
+        action=argparse.BooleanOptionalAction,
+        help='color')
+    
     args_dict = vars(parser.parse_args())
 
     return args_dict
@@ -131,6 +147,9 @@ def input_argument():
 
 if __name__ == '__main__':
     args_dict = input_argument()
-    AW = AlwaysGreen(window_period=args_dict['time'])
+    AW = AlwaysGreen(
+        window_period=args_dict['time'],
+        color=args_dict['color']
+    )
     print(f'{logo}''')
     AW.run()
