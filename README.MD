@@ -35,7 +35,7 @@ The **AlwaysGreen** Python script ensures your system remains active by detectin
    - Monitors mouse and keyboard events to detect user activity and reset the inactivity timer.
 
 3. **Mouse Movement**:
-   - Moves the mouse or simulates a click to maintain system activity when no user input is detected.
+   - Moves the mouse and simulates a click to maintain system activity when no user input is detected.
 
 4. **Continuous Monitoring**:
    - Runs indefinitely, alternating between monitoring inactivity and simulating activity.
