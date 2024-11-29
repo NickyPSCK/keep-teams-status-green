@@ -4,6 +4,7 @@
 import sys
 import time
 import argparse
+from datetime import datetime
 from pynput import mouse, keyboard
 
 logo = '''----------------------------------------------
@@ -25,6 +26,7 @@ class AlwaysGreen:
     def __init__(
         self,
         timeout_period: int = 60,
+        exemped_periods: list = None,
         color: bool = False,
         status: bool = True
     ):
@@ -36,13 +38,45 @@ class AlwaysGreen:
             color (bool): Whether to use colored status output.
             status (bool): Whether to display the user activity status.
         '''
+
+        self._time_format = '%H:%M:%S'
+        self._mouse = mouse.Controller()
+        self._move_distance = 100
+
         self._timeout_period = timeout_period
+        self._exemped_periods = self._process_exemped_periods(
+            exemped_periods=exemped_periods
+        )
         self._color = color
         self._status = status
 
-        self._mouse = mouse.Controller()
-        self._move_distance = 100
+        self._in_exemped_periods = self._check_exemped_periods()
         self._time_left = self._timeout_period
+        if self._color:
+            self._reset_color = '\033[0m'
+            self._green_color = '\033[32m'
+            self._red_color = '\033[31m'
+        else:
+            self._reset_color = ''
+            self._green_color = ''
+            self._red_color = ''
+
+    def _process_exemped_periods(self, exemped_periods):
+        if exemped_periods is None:
+            return list()
+        else:
+            processed_exemped_periods = list()
+            for start_time_str, end_time_str in exemped_periods:
+                start_time = datetime.strptime(
+                    start_time_str,
+                    self._time_format
+                ).time()
+                end_time = datetime.strptime(
+                    end_time_str,
+                    self._time_format
+                ).time()
+                processed_exemped_periods.append((start_time, end_time))
+            return processed_exemped_periods
 
     def _set_active(self):
         '''Resets the inactive timer when user activity is detected.'''
@@ -68,25 +102,25 @@ class AlwaysGreen:
     def _report_status(self):
         '''Displays the current user activity status.'''
         if self._status:
-            if self._color:
-                reset_color = '\033[0m'
-                active_color = '\033[32m'
-                inactive_color = '\033[33m'
+            if self._in_exemped_periods:
+                app_status = f'{self._red_color}EXEMPTED{self._reset_color}'
             else:
-                reset_color = ''
-                active_color = ''
-                inactive_color = ''
+                app_status = f'{self._green_color}ENFORCED{self._reset_color}'
 
             if self._is_moved:
-                status = f'{active_color}  Active'
+                user_status = '🟢'
             else:
-                status = f'{inactive_color}Inactive'
+                user_status = '🟡'
+
+            app_status_str = f'| {app_status}'
+            countdown_str = f'| Inactive in {self._time_left:>6}s'
+            user_status_str = f'| Status:{user_status} |'
 
             print(
-                f'{reset_color}::Inactive in{self._time_left:>7}s,',
-                f'{reset_color}::User Status:',
-                status,
-                f'{reset_color}',
+                app_status_str,
+                countdown_str,
+                user_status_str,
+                f'{self._reset_color}',
                 end='\r'
             )
 
@@ -97,18 +131,28 @@ class AlwaysGreen:
             self._time_left -= 1
             time.sleep(1)
 
+    def _check_exemped_periods(self):
+        exemped = False
+        for start_time, end_time in self._exemped_periods:
+            if start_time <= datetime.now().time() <= end_time:
+                exemped = True
+                break
+        return exemped
+
     def _move_mouse(self):
         '''Moves the mouse to prevent inactivity.'''
-        if not self._is_moved:
-            if self._mouse.position != (0, 0):
-                self._mouse.position = (0, 0)
-                self._mouse.press(mouse.Button.left)
-                self._mouse.release(mouse.Button.left)
-            else:
-                self._mouse.move(
-                    self._move_distance,
-                    self._move_distance
-                )
+        self._in_exemped_periods = self._check_exemped_periods()
+        if not self._in_exemped_periods:
+            if not self._is_moved:
+                if self._mouse.position != (0, 0):
+                    self._mouse.position = (0, 0)
+                    self._mouse.press(mouse.Button.left)
+                    self._mouse.release(mouse.Button.left)
+                else:
+                    self._mouse.move(
+                        self._move_distance,
+                        self._move_distance
+                    )
 
     def run(self):
         '''Main logic for detecting inactivity and moving the mouse.'''
@@ -143,6 +187,19 @@ class AlwaysGreen:
 
 def input_argument():
     '''Parses command-line arguments.'''
+
+    def add_bool_arg(
+        parser,
+        name,
+        help='',
+        default=True,
+
+    ):
+        group = parser.add_mutually_exclusive_group(required=False)
+        group.add_argument('--' + name, dest=name, action='store_true', help=help)
+        group.add_argument('--no-' + name, dest=name, action='store_false', help=help)
+        parser.set_defaults(**{name: default})
+
     parser = argparse.ArgumentParser(
         description='G-TECH: Unleash Green Energy.'
     )
@@ -152,23 +209,9 @@ def input_argument():
         default=5,
         help='Timeout period in seconds before inactivity action is taken.')
 
-    parser.add_argument(
-        '--color',
-        action=argparse.BooleanOptionalAction,
-        default=True,
-        help='Enable or disable colored output.')
-
-    parser.add_argument(
-        '--status',
-        action=argparse.BooleanOptionalAction,
-        default=True,
-        help='Enable or disable staus.')
-
-    parser.add_argument(
-        '--logo',
-        action=argparse.BooleanOptionalAction,
-        default=True,
-        help='Enable or disable displayed logo.')
+    add_bool_arg(parser, 'color', help='Enable or disable colored output.')
+    add_bool_arg(parser, 'status', help='Enable or disable staus.')
+    add_bool_arg(parser, 'logo', help='Enable or disable displayed logo.')
 
     args_dict = vars(parser.parse_args())
 
@@ -177,8 +220,15 @@ def input_argument():
 
 if __name__ == '__main__':
     args_dict = input_argument()
+
+    exemped_periods = [
+        ('12:00:00', '13:00:00'),
+        ('17:00:00', '18:00:00'),
+    ]
+
     AW = AlwaysGreen(
         timeout_period=args_dict['time'],
+        exemped_periods=exemped_periods,
         color=args_dict['color'],
         status=args_dict['status'],
     )
