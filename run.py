@@ -27,39 +27,53 @@ class AlwaysGreen:
         self,
         timeout_period: int = 60,
         exemped_periods: list = None,
-        color: bool = False,
-        status: bool = True
+        modern_output: bool = False,
+        show_status: bool = True
     ):
         '''
         Prevents inactivity by detecting user input and moving the mouse.
         Args:
             timeout_period (int): Timeout period in seconds
                 before moving the mouse.
-            color (bool): Whether to use colored status output.
-            status (bool): Whether to display the user activity status.
+            modern_output (bool): Whether to use colored and emoji status output.
+            show_status (bool): Whether to display the user activity status.
         '''
 
         self._time_format = '%H:%M:%S'
         self._mouse = mouse.Controller()
         self._move_distance = 100
+        self._status_str = None
 
         self._timeout_period = timeout_period
         self._exemped_periods = self._process_exemped_periods(
             exemped_periods=exemped_periods
         )
-        self._color = color
-        self._status = status
+        self._modern_output = modern_output
+        self._show_status = show_status
 
         self._in_exemped_periods = self._check_exemped_periods()
         self._time_left = self._timeout_period
-        if self._color:
+
+        if self._modern_output:
             self._reset_color = '\033[0m'
             self._green_color = '\033[32m'
             self._red_color = '\033[31m'
+            self._user_active_status = 'Status:🟢'
+            self._user_inactive_status = 'Status:🟡'
         else:
             self._reset_color = ''
             self._green_color = ''
             self._red_color = ''
+            self._user_active_status = ' #ACTIVE '
+            self._user_inactive_status = '#INACTIVE'
+
+    @property
+    def status_str(self):
+        return self._status_str
+
+    @property
+    def exemped_periods(self):
+        return self._exemped_periods
 
     def _process_exemped_periods(self, exemped_periods):
         if exemped_periods is None:
@@ -77,6 +91,20 @@ class AlwaysGreen:
                 ).time()
                 processed_exemped_periods.append((start_time, end_time))
             return processed_exemped_periods
+
+    def print_exemped_periods(self):
+        if len(self._exemped_periods) > 0:
+            print('Exemped Periods:')
+            for start_time, end_time in self._exemped_periods:
+                print(
+                    '    >> ',
+                    start_time.strftime(self._time_format),
+                    '-',
+                    end_time.strftime(self._time_format),
+                )
+            return True
+        else:
+            return False
 
     def _set_active(self):
         '''Resets the inactive timer when user activity is detected.'''
@@ -101,28 +129,28 @@ class AlwaysGreen:
 
     def _report_status(self):
         '''Displays the current user activity status.'''
-        if self._status:
+        if self._show_status:
             if self._in_exemped_periods:
-                app_status = f'{self._red_color}EXEMPTED{self._reset_color}'
+                app_status = f'{self._red_color}RELEASED{self._reset_color}'
             else:
                 app_status = f'{self._green_color}ENFORCED{self._reset_color}'
 
             if self._is_moved:
-                user_status = '🟢'
+                user_status = self._user_active_status
             else:
-                user_status = '🟡'
+                user_status = self._user_inactive_status
 
             app_status_str = f'| {app_status}'
             countdown_str = f'| Inactive in {self._time_left:>6}s'
-            user_status_str = f'| Status:{user_status} |'
+            user_status_str = f'| {user_status} |'
 
-            print(
+            self._status_str = ' '.join([
                 app_status_str,
                 countdown_str,
                 user_status_str,
-                f'{self._reset_color}',
-                end='\r'
-            )
+                f'{self._reset_color}'
+            ])
+            print(self._status_str, end='\r')
 
     def _wait(self):
         '''Waits for the timeout period while reporting status.'''
@@ -187,19 +215,6 @@ class AlwaysGreen:
 
 def input_argument():
     '''Parses command-line arguments.'''
-
-    def add_bool_arg(
-        parser,
-        name,
-        help='',
-        default=True,
-
-    ):
-        group = parser.add_mutually_exclusive_group(required=False)
-        group.add_argument('--' + name, dest=name, action='store_true', help=help)
-        group.add_argument('--no-' + name, dest=name, action='store_false', help=help)
-        parser.set_defaults(**{name: default})
-
     parser = argparse.ArgumentParser(
         description='G-TECH: Unleash Green Energy.'
     )
@@ -207,11 +222,32 @@ def input_argument():
         '--time',
         type=int,
         default=5,
-        help='Timeout period in seconds before inactivity action is taken.')
-
-    add_bool_arg(parser, 'color', help='Enable or disable colored output.')
-    add_bool_arg(parser, 'status', help='Enable or disable staus.')
-    add_bool_arg(parser, 'logo', help='Enable or disable displayed logo.')
+        help='Timeout period in seconds before inactivity action is taken.'
+    )
+    parser.add_argument(
+        '--classic',
+        action='store_false',
+        default=True,
+        help='Disable colored and emoji output.'
+    )
+    parser.add_argument(
+        '--no-logo',
+        action='store_false',
+        default=True,
+        help='Disable displayed logo.',
+    )
+    parser.add_argument(
+        '--no-exemped-period',
+        action='store_false',
+        default=True,
+        help='Disable displayed exemped period.',
+    )
+    parser.add_argument(
+        '--no-status',
+        action='store_false',
+        default=True,
+        help='Disable displayed staus'
+    )
 
     args_dict = vars(parser.parse_args())
 
@@ -229,11 +265,15 @@ if __name__ == '__main__':
     AW = AlwaysGreen(
         timeout_period=args_dict['time'],
         exemped_periods=exemped_periods,
-        color=args_dict['color'],
-        status=args_dict['status'],
+        modern_output=args_dict['classic'],
+        show_status=args_dict['no_status'],
     )
-    if args_dict['logo']:
+    if args_dict['no_logo']:
         print(f'{logo}''')
+
+    if args_dict['no_exemped_period']:
+        if AW.print_exemped_periods():
+            print('----------------------------------------------')
 
     try:
         AW.run()
