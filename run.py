@@ -23,6 +23,18 @@ logo = '''----------------------------------------------
 
 
 class AlwaysGreen:
+    '''
+    A class to prevent inactivity by detecting user input and moving the mouse.
+
+    Attributes:
+        timeout_period (int): Timeout period in seconds
+            before moving the mouse.
+        exemped_periods (list): List of periods during
+            which the application is exempted from action.
+        modern_output (bool): Enables modern output with
+            colored text and emojis.
+        show_status (bool): Displays the user activity status.
+    '''
     def __init__(
         self,
         timeout_period: int = 60,
@@ -31,12 +43,17 @@ class AlwaysGreen:
         show_status: bool = True
     ):
         '''
-        Prevents inactivity by detecting user input and moving the mouse.
+        Initializes the AlwaysGreen instance with user-configurable parameters.
+
         Args:
-            timeout_period (int): Timeout period in seconds
-                before moving the mouse.
-            modern_output (bool): Whether to use colored and emoji status output.
-            show_status (bool): Whether to display the user activity status.
+            timeout_period (int): Timeout period in seconds before
+                inactivity action is triggered.
+            exemped_periods (list): List of tuples with start and end
+                times of exempted periods in HH:MM:SS format.
+            modern_output (bool): Enables or disables colored
+                and emoji status output.
+            show_status (bool): Enables or disables the display
+                of user activity status.
         '''
 
         self._time_format = '%H:%M:%S'
@@ -69,13 +86,38 @@ class AlwaysGreen:
 
     @property
     def status_str(self):
+        '''
+        Returns the current status string.
+
+        Returns:
+            str: Current status string.
+
+        '''
         return self._status_str
 
     @property
     def exemped_periods(self):
+        '''
+        Returns the list of exempted periods.
+
+        Returns:
+            list: Processed exempted periods as list of tuples
+            with datetime objects.
+        '''
         return self._exemped_periods
 
     def _process_exemped_periods(self, exemped_periods):
+        '''
+        Processes exempted periods and converts them
+        into datetime.time objects.
+
+        Args:
+            exemped_periods (list): List of tuples with start and end times
+            in HH:MM:SS format.
+
+        Returns:
+            list: List of tuples with datetime.time objects.
+        '''
         if exemped_periods is None:
             return list()
         else:
@@ -93,6 +135,12 @@ class AlwaysGreen:
             return processed_exemped_periods
 
     def print_exemped_periods(self):
+        '''
+        Prints the exempted periods if any are set.
+
+        Returns:
+            bool: True if exempted periods exist, False otherwise.
+        '''
         if len(self._exemped_periods) > 0:
             print('Exemped Periods:')
             for start_time, end_time in self._exemped_periods:
@@ -107,28 +155,47 @@ class AlwaysGreen:
             return False
 
     def _set_active(self):
-        '''Resets the inactive timer when user activity is detected.'''
+        '''
+        Resets the inactive timer when user activity is detected.
+        '''
         self._is_moved = True
         self._time_left = self._timeout_period
         self._report_status()
 
     def _on_move(self, x, y):
+        '''
+        Callback for mouse move events.
+        '''
         self._set_active()
 
     def _on_click(self, x, y, button, pressed):
+        '''
+        Callback for mouse click  events.
+        '''
         self._set_active()
 
     def _on_scroll(self, x, y, dx, dy):
+        '''
+        Callback for mouse scroll events.
+        '''
         self._set_active()
 
     def _on_press(self, key):
+        '''
+        Callback for keyboard press events.
+        '''
         self._set_active()
 
     def _on_release(self, key):
+        '''
+        Callback for keyboard release events.
+        '''
         self._set_active()
 
     def _report_status(self):
-        '''Displays the current user activity status.'''
+        '''
+        Displays the current user activity status.
+        '''
         if self._show_status:
             if self._in_exemped_periods:
                 app_status = f'{self._red_color}RELEASED{self._reset_color}'
@@ -153,13 +220,21 @@ class AlwaysGreen:
             print(self._status_str, end='\r')
 
     def _wait(self):
-        '''Waits for the timeout period while reporting status.'''
+        '''
+        Waits for the timeout period while reporting status.
+        '''
         while self._time_left >= 0:
             self._report_status()
             self._time_left -= 1
             time.sleep(1)
 
     def _check_exemped_periods(self):
+        '''
+        Checks if the current time is within any exempted period.
+
+        Returns:
+            bool: True if within an exempted period, False otherwise.
+        '''
         exemped = False
         for start_time, end_time in self._exemped_periods:
             if start_time <= datetime.now().time() <= end_time:
@@ -168,7 +243,9 @@ class AlwaysGreen:
         return exemped
 
     def _move_mouse(self):
-        '''Moves the mouse to prevent inactivity.'''
+        '''
+        Moves the mouse to prevent inactivity.
+        '''
         self._in_exemped_periods = self._check_exemped_periods()
         if not self._in_exemped_periods:
             if not self._is_moved:
@@ -183,7 +260,11 @@ class AlwaysGreen:
                     )
 
     def run(self):
-        '''Main logic for detecting inactivity and moving the mouse.'''
+        '''
+        Main logic for detecting inactivity and moving the mouse.
+        Continuously monitors user activity and takes actions
+        based on timeout settings.
+        '''
         self._is_moved = False
 
         while True:
@@ -214,7 +295,12 @@ class AlwaysGreen:
 
 
 def input_argument():
-    '''Parses command-line arguments.'''
+    '''
+    Parses command-line arguments for configuring the application.
+
+    Returns:
+        dict: Dictionary of parsed arguments.
+    '''
     parser = argparse.ArgumentParser(
         description='G-TECH: Unleash Green Energy.'
     )

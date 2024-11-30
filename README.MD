@@ -3,7 +3,11 @@
 
 ## Overview
 
-The **AlwaysGreen** Python script ensures your system remains active by detecting user input (mouse and keyboard activity) and automatically moving the mouse when inactivity is detected for a specified timeout period.
+The `AlwaysGreen` tool prevents system inactivity by simulating mouse movements. It ensures that screensavers, timeouts, or auto-lock mechanisms do not activate while the user is away or during specific exempted periods.
+
+This script is helpful for:
+- Preventing inactivity during long-running tasks.
+- Avoiding auto-logout due to system timeouts.
 
 ---
 
@@ -12,17 +16,28 @@ The **AlwaysGreen** Python script ensures your system remains active by detectin
 1. **Activity Detection**:
    - Monitors mouse and keyboard actions using the `pynput` library.
 
-2. **Inactivity Prevention**:
-   - Moves the mouse or performs a click to prevent system inactivity after a timeout.
+1. **Timeout-Based Activity**:
+   - Simulates activity after a user-defined period of inactivity.
 
-3. **Customizable Options**:
-   - Command-line arguments allow users to control the timeout period, status display, colored output, and logo display.
+2. **Exempted Periods**:
+   - Define time windows where the system will not enforce activity.
 
-4. **Real-Time Feedback**:
+3. **Modern Output**:
+   - Optional colored and emoji-based status outputs.
+
+4. **Customizable Settings**:
+   - Timeout duration
+   - Logo display
+   - Status and exempt period visibility
+
+5. **Real-Time Feedback**:
    - Outputs activity status in real-time, with optional colored text for better visibility.
 
-5. **User-Friendly Command-Line Interface**:
+6. **User-Friendly Command-Line Interface**:
    - Use command-line options to customize behavior.
+
+7. **Keyboard Interrupt Handling**: Graceful termination with `CTRL-C`.
+
 
 ---
 
@@ -47,15 +62,39 @@ The **AlwaysGreen** Python script ensures your system remains active by detectin
 Run the script from the command line:
 
 ```bash
-python app.py --time 60 --color --status --logo
+python app.py [OPTIONS]
 ```
 
 ### Command-Line Arguments
 
-- `--time`: Set the inactivity timeout in seconds (default is 5 seconds).
-- `--color`: Enable colored status output (green for active, yellow for inactive). Use `--no-color` to disable.
-- `--status`: Enable or disable activity status display. Use `--no-status` to hide status updates.
-- `--logo`: Enable or disable the display of the logo. Use `--no-logo` to hide the logo.
+|       Argument      	| Default 	|                           Description                          	|
+|:-------------------:	|:-------:	|:--------------------------------------------------------------:	|
+|  --time             	| 5       	| Timeout period in   seconds before inactivity action is taken. 	|
+| --classic           	| Disabled 	| Enable classic   (non-colored) output mode.                    	|
+| --no-logo           	| Disabled 	| Disable the display of   the logo.                             	|
+| --no-exemped-period 	| Disabled 	| Disable the display of   exempt periods.                       	|
+| --no-status         	| Disabled 	| Disable the display of   user activity status.                 	|
+
+---
+
+## Example
+Run with default settings:
+
+```bash
+python app.py
+```
+
+Run with a 10-second timeout and no colored output:
+
+```bash
+python AlwaysGreen.py --time 10 --classic
+```
+
+Run without displaying exempt periods or the logo:
+
+```bash
+python AlwaysGreen.py --no-logo --no-exemped-period
+```
 
 ---
 
@@ -66,15 +105,33 @@ python app.py --time 60 --color --status --logo
 
 ---
 
-## Example Output
+## Exempted Periods
+
+Define custom exempted periods within the code to prevent enforced activity during specific times.
+
+```Python
+exempted_periods = [
+    ('12:00:00', '13:00:00'),  # Lunch break
+    ('17:00:00', '18:00:00'),  # Evening break
+]
+```
+
+---
+
+## Output Example
 
 The script displays activity status dynamically:
 
+Default Mode
+
 ```
-::Inactive in     45s, ::User Status:   Active
+| ENFORCED | Inactive in     5s | Status:🟡 |
+```
+Classic Mode
+```
+| ENFORCED | Inactive in     5s | #INACTIVE |
 ```
 
-With `--color` enabled, status messages are displayed in green or yellow for better visibility.
 
 ---
 
@@ -87,28 +144,6 @@ This script was inspired by and utilizes concepts from the following sources:
 3. [ASCII Art Generator - asciiart.eu](https://www.asciiart.eu/text-to-ascii-art)
 4. [Print Colors in Python Terminal - GeeksforGeeks](https://www.geeksforgeeks.org/print-colors-python-terminal/)
 
-
----
-
-## Visual Appeal
-
-The script features an ASCII art logo for branding and visual appeal:
-
-```
-----------------------------------------------
-||||||||||||||||||||||||||||||||||||||||||||||
-----------------------------------------------
-    ____           _____ _____ ____ _   _
-   / ___|         |_   _| ____/ ___| | | |
-  | |  _   _____    | | |  _|| |   | |_| |
-  | |_| | |_____|   | | | |__| |___|  _  |
-   \____|           |_| |_____\____|_| |_|
-
->>>>>>>>> :: Unleash Green Energy :: <<<<<<<<<
-----------------------------------------------
-|||||||||||| PRESS CTRL-C TO QUIT ||||||||||||
-----------------------------------------------
-```
 
 ---
 
