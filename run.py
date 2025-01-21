@@ -1,4 +1,4 @@
-# G-TECH: Unleash Green Energy
+# G-TEC: Unleash Green Energy
 # Long lasting green technology.
 
 import sys
@@ -302,7 +302,7 @@ def input_argument():
         dict: Dictionary of parsed arguments.
     '''
     parser = argparse.ArgumentParser(
-        description='G-TECH: Unleash Green Energy.'
+        description='G-TEC: Unleash Green Energy.'
     )
     parser.add_argument(
         '--time',
