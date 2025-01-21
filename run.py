@@ -10,11 +10,11 @@ from pynput import mouse, keyboard
 logo = '''----------------------------------------------
 ||||||||||||||||||||||||||||||||||||||||||||||
 ----------------------------------------------
-    ____           _____ _____ ____ _   _
-   / ___|         |_   _| ____/ ___| | | |
-  | |  _   _____    | | |  _|| |   | |_| |
-  | |_| | |_____|   | | | |__| |___|  _  |
-   \\____|           |_| |_____\\____|_| |_|
+       ____           _____ _____ ____
+      / ___|         |_   _| ____/ ___|
+     | |  _   _____    | | |  _|| |
+     | |_| | |_____|   | | | |__| |___
+      \\____|           |_| |_____\\____|
 
 >>>>>>>>> :: Unleash Green Energy :: <<<<<<<<<
 ----------------------------------------------
@@ -160,6 +160,7 @@ class AlwaysGreen:
         '''
         self._is_moved = True
         self._time_left = self._timeout_period
+        self._in_exemped_periods = self._check_exemped_periods()
         self._report_status()
 
     def _on_move(self, x, y):
@@ -246,7 +247,6 @@ class AlwaysGreen:
         '''
         Moves the mouse to prevent inactivity.
         '''
-        self._in_exemped_periods = self._check_exemped_periods()
         if not self._in_exemped_periods:
             if not self._is_moved:
                 if self._mouse.position != (0, 0):
@@ -289,8 +289,8 @@ class AlwaysGreen:
             mouse_listener.join()
             keyboard_listener.join()
 
+            self._in_exemped_periods = self._check_exemped_periods()
             self._move_mouse()
-
             self._is_moved = False
 
 
