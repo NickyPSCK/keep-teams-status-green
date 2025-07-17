@@ -65,35 +65,44 @@ Run the script from the command line:
 python app.py [OPTIONS]
 ```
 
+
 ### Command-Line Arguments
 
-|       Argument      	| Default 	|                           Description                          	|
-|:-------------------:	|:-------:	|:--------------------------------------------------------------:	|
-|  --time             	| 5       	| Timeout period in   seconds before inactivity action is taken. 	|
-| --classic           	| Disabled 	| Enable classic   (non-colored) output mode.                    	|
-| --no-logo           	| Disabled 	| Disable the display of   the logo.                             	|
-| --no-exemped-period 	| Disabled 	| Disable the display of   exempt periods.                       	|
-| --no-status         	| Disabled 	| Disable the display of   user activity status.                 	|
+|       Argument         | Default   | Description                                                                                 |
+|:---------------------: |:--------: |:------------------------------------------------------------------------------------------:|
+|  --time                | 5         | Timeout period in seconds before inactivity action is taken.                                 |
+| --classic              | Disabled  | Enable classic (non-colored) output mode.                                                    |
+| --no-logo              | Disabled  | Disable the display of the logo.                                                            |
+| --no-exemped-period    | Disabled  | Disable the display of exempt periods.                                                      |
+| --no-status            | Disabled  | Disable the display of user activity status.                                                |
+| --exemped-period       | None      | Add exempted periods in the format HH:MM:SS-HH:MM:SS. Multiple periods can be separated by space. Example: `--exemped-period 12:00:00-13:00:00 17:00:00-18:00:00` |
 
 ---
 
 ## Example
+
 Run with default settings:
 
 ```bash
-python app.py
+python run.py
 ```
 
 Run with a 10-second timeout and no colored output:
 
 ```bash
-python AlwaysGreen.py --time 10 --classic
+python run.py --time 10 --classic
 ```
 
 Run without displaying exempt periods or the logo:
 
 ```bash
-python AlwaysGreen.py --no-logo --no-exemped-period
+python run.py --no-logo --no-exemped-period
+```
+
+Run with custom exempted periods:
+
+```bash
+python run.py --exemped-period 12:00:00-13:00:00 17:00:00-18:00:00
 ```
 
 ---
@@ -105,11 +114,20 @@ python AlwaysGreen.py --no-logo --no-exemped-period
 
 ---
 
+
 ## Exempted Periods
 
-Define custom exempted periods within the code to prevent enforced activity during specific times.
+You can now define custom exempted periods either within the code or via the command line using the `--exemped-period` argument. This allows you to prevent enforced activity during specific times without modifying the script.
 
-```Python
+**Example (command line):**
+
+```bash
+python run.py --exemped-period 12:00:00-13:00:00 17:00:00-18:00:00
+```
+
+**Example (in code):**
+
+```python
 exempted_periods = [
     ('12:00:00', '13:00:00'),  # Lunch break
     ('17:00:00', '18:00:00'),  # Evening break

@@ -1,6 +1,27 @@
 # G-TEC: Unleash Green Energy
 # Long lasting green technology.
+'''
+run.py - Keep Teams Status Green
 
+This script prevents user inactivity on a computer by monitoring mouse and keyboard events 
+and simulating activity if the user is idle for a configurable period. 
+It is designed to keep status indicators (such as Microsoft Teams) green/active during 
+specified hours, with support for exempted periods, colored output, and status display.
+
+Usage:
+    python run.py [--time SECONDS] [--classic] [--no-logo] [--no-exemped-period] [--no-status]
+
+Arguments:
+    --time                Timeout period in seconds before inactivity action is taken (default: 5)
+    --classic             Disable colored and emoji output
+    --no-logo             Disable displayed logo
+    --no-exemped-period   Disable displayed exempted period
+    --no-status           Disable displayed status
+
+Requirements:
+    - Python 3.x
+    - pynput
+'''
 import sys
 import time
 import argparse
@@ -306,6 +327,16 @@ def input_argument():
         description='G-TEC: Unleash Green Energy.'
     )
     parser.add_argument(
+        '--exemped-period',
+        nargs='*',
+        metavar=('START-END'),
+        help=(
+            'Add exempted periods in the format HH:MM:SS-HH:MM:SS. '
+            'Multiple periods can be separated by space.\n'
+            'Example: --exemped-period 12:00:00-13:00:00 17:00:00-18:00:00'
+        ),
+    )
+    parser.add_argument(
         '--time',
         type=int,
         default=5,
@@ -344,10 +375,23 @@ def input_argument():
 if __name__ == '__main__':
     args_dict = input_argument()
 
-    exemped_periods = [
-        ('12:00:00', '13:00:00'),
-        ('17:00:00', '18:00:00'),
-    ]
+    if args_dict.get('exemped_period'):
+        exemped_periods = []
+        for period in args_dict['exemped_period']:
+            try:
+                start, end = period.split('-')
+                exemped_periods.append((start, end))
+            except ValueError:
+                print(
+                    f"Invalid exemped period format: {period}.\n"
+                    "Expected HH:MM:SS-HH:MM:SS"
+                )
+                sys.exit(1)
+    else:
+        exemped_periods = [
+            ('11:30:00', '13:00:00'),
+            ('17:15:00', '19:00:00'),
+        ]
 
     AW = AlwaysGreen(
         timeout_period=args_dict['time'],
